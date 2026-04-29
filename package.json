@@ -1,0 +1,16 @@
+{
+  "name": "a10-2025_avance",
+  "version": "1.0.0",
+  "description": "Demo vulnerable para el tema **OWASP A10:2025 - Mishandling of Exceptional Conditions**.",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "start:dev": "node --watch src/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
