@@ -8,7 +8,7 @@ import SensitiveErrorScreen from './screens/SensitiveErrorScreen';
 import MissingParamScreen from './screens/MissingParamScreen';
 import DosScreen from './screens/DosScreen';
 
-const IS_FIXED = false;
+const IS_FIXED = true;
 
 const Tab = createBottomTabNavigator();
 
