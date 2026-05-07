@@ -148,3 +148,47 @@ La app usa el parametro `month` sin validarlo correctamente y maneja la excepcio
 - Detalles tecnicos: enviarlos solo a logs internos.
 - Operaciones sensibles: abortar por completo si faltan datos.
 - Manejador global de errores: centralizado y sin filtrar stack traces.
+
+## App móvil (Expo)
+
+La app permite a los asistentes interactuar con las vulnerabilidades desde sus teléfonos.
+
+### Requisitos
+
+- Expo Go instalado en el teléfono (Android o iOS)
+- Laptop y teléfonos en la misma red WiFi
+
+### Configuración antes de la presentación
+
+1. Encontrar la IP de la laptop:
+   - Windows: `ipconfig` → Dirección IPv4 del adaptador WiFi
+2. Editar `mobile/config.js` y reemplazar la IP:
+   ```js
+   export const BASE_URL = 'http://TU_IP_AQUI:3000';
+   ```
+
+### Ejecución
+
+En dos terminales separadas:
+
+**Terminal 1 — Backend:**
+```bash
+npm start
+```
+
+**Terminal 2 — Expo:**
+```bash
+cd mobile
+npx expo start
+```
+
+Compartir el QR que aparece en la terminal con los compañeros para que lo escaneen con Expo Go.
+
+### Para la demo de la rama fixed
+
+```bash
+git checkout fixed
+npm start
+```
+
+La app Expo no necesita reiniciarse; solo recarga o escanea el mismo QR.
