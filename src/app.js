@@ -1,11 +1,12 @@
 const express = require('express');
+const cors = require('cors');
 const insecureAuth = require('./auth');
 const users = require('./data').users;
 const reports = require('./data').reports;
 const app = express();
 const PORT = 3000;
 
-//Middleware para recibir JSON
+app.use(cors());
 app.use(express.json());
 
 app.get('/health', (req, res) => {
