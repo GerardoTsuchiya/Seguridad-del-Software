@@ -2,5 +2,6 @@ node_modules/
 .env
 dist/
 npm-debug.log
+mobile/node_modules/
 
 
