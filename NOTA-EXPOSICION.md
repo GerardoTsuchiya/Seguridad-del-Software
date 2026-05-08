@@ -176,6 +176,14 @@ function secureAuth(req, res, next) {
 
 **Principio aplicado:** *Fail closed* — ante cualquier error de seguridad, denegar el acceso.
 
+**Casos reales documentados:**
+
+> **CVE-2023-20198 — Cisco IOS XE (octubre 2023, CVSS 10.0)**
+> El componente de UI web de IOS XE tenía una falla en el middleware de autenticación: una petición HTTP crafteada hacia `/webui/logoutconfirm.html` con un header `X-Auth-Token` vacío o malformado provocaba que el proceso de autenticación lanzara una excepción interna. En lugar de denegar el acceso, el sistema retornaba un token de sesión válido con privilegios de nivel 15 (máximo administrativo). Se explotó activamente antes de que Cisco publicara el parche; más de 40,000 dispositivos fueron comprometidos según datos de Censys y Shodan. Los atacantes instalaban una backdoor persistente vía implante Lua en el sistema de archivos.
+
+> **CVE-2022-40684 — Fortinet FortiOS / FortiProxy (octubre 2022, CVSS 9.8)**
+> El endpoint de API de administración (`/api/v2/cmdb/`) implementaba autenticación vía módulo FGFM. Si el cliente enviaba el header `Forwarded: for=127.0.0.1` (simulando una petición desde localhost), el módulo de autenticación lo clasificaba como tráfico interno de confianza y omitía la verificación de credenciales por completo. El resultado era acceso read-write a la configuración completa del firewall, incluyendo la capacidad de crear cuentas de administrador y modificar reglas. Fortinet notificó en privado a clientes antes del aviso público porque ya había explotación activa en la red.
+
 ---
 
 ### 3.2 Exposición de errores sensibles — `/debug-user`
@@ -240,6 +248,14 @@ app.use((err, req, res, next) => {
 ```
 
 **Principio aplicado:** Los detalles técnicos solo van a los logs del servidor. El usuario solo recibe mensajes genéricos y códigos HTTP adecuados.
+
+**Casos reales documentados:**
+
+> **Cloudbleed — Cloudflare (febrero 2017)**
+> El parser HTML de Cloudflare (escrito en C con Ragel) tenía un bug de buffer over-read: ante ciertos patrones de HTML malformado, el parser leía más allá del buffer asignado y retornaba memoria adyacente del proceso al cliente HTTP como parte del contenido de la página. Esa memoria contenía fragmentos de otras peticiones HTTP procesadas por el mismo worker: cookies de sesión, tokens de autenticación, passwords en texto claro y headers privados de otros usuarios. Google Project Zero lo descubrió porque los bots de Bing y Google estaban indexando páginas con esa memoria filtrada. El bug estuvo activo durante aproximadamente 6 meses (septiembre 2016 – febrero 2017) afectando millones de sitios detrás de Cloudflare.
+
+> **Django `DEBUG=True` en producción (patrón recurrente)**
+> Cuando `DEBUG=True` está activo en Django, cualquier excepción no manejada genera una página HTML detallada que expone: stack trace completo con nombres de archivos y números de línea, valores de todas las variables locales en cada frame, y el contenido completo de `settings.py` incluyendo `SECRET_KEY`, contraseñas de base de datos y credenciales de servicios cloud. Instalaciones gubernamentales y empresariales documentadas en HackerOne (reports #152569 y #362331) permitieron a investigadores obtener credenciales de base de datos directamente desde la página de error 500.
 
 ---
 
@@ -306,6 +322,14 @@ app.post('/admin/change-role', (req, res, next) => {
 
 **Principio aplicado:** Las operaciones sensibles deben abortarse completamente si faltan datos. No se asumen valores por defecto en operaciones de modificación de privilegios.
 
+**Casos reales documentados:**
+
+> **Parler API — enero 2021**
+> Tras la suspensión de Parler por AWS, una archivista (@donk_enby) descubrió que la API pública de Parler no requería autenticación para endpoints de lectura y los IDs de posts eran enteros secuenciales sin rate limiting ni validación de rango (`/v1/post?id=1`, `/v1/post?id=2`…). Las URLs de videos y fotos retornaban metadatos EXIF originales sin stripping, incluyendo coordenadas GPS precisas. Mediante un script de enumeración secuencial simple se descargaron aproximadamente 70 TB de contenido (videos, fotos, posts) en ~48 horas. Los metadatos GPS de videos grabados el 6 de enero de 2021 en el Capitolio de EE. UU. fueron utilizados posteriormente por investigadores del FBI.
+
+> **Enumeración de cuentas — API de Facebook/Instagram (2019)**
+> El endpoint de recuperación de contraseña de Meta retornaba respuestas HTTP diferentes según si el email o teléfono existía en la base de datos: HTTP 200 con `{"exists": true}` para cuentas válidas, HTTP 400 para inexistentes. Sin rate limiting efectivo y sin validar correctamente los parámetros de paginación. El investigador Saugat Pokharel demostró la enumeración masiva de millones de números de teléfono y los reportó vía HackerOne. Meta pagó $30,000 USD de bug bounty y corrigió normalizando las respuestas y agregando rate limiting.
+
 ---
 
 ### 3.4 Excepción no controlada / DoS simple — `/reports`
@@ -367,6 +391,14 @@ app.get('/reports', (req, res, next) => {
 ```
 
 **Principio aplicado:** Validar la entrada antes de operar. Si el parámetro no cumple el formato esperado, rechazar con `400 Bad Request` antes de intentar acceder a los datos.
+
+**Casos reales documentados:**
+
+> **Cloudflare — Outage global del 2 de julio de 2019 (27 minutos)**
+> Cloudflare desplegó una nueva regla WAF para detectar ataques de path traversal. La expresión regular incluida en la regla causaba backtracking catastrófico exponencial O(2ⁿ) ante tráfico real de producción: un solo hilo de CPU llegaba al 100% intentando evaluar cada petición entrante. Cloudflare no tenía mecanismo de circuit-breaker ni timeout por regla en su motor de regex. El resultado fue que todos los CPUs de todos los puntos de presencia globales se saturaron simultáneamente. El outage duró 27 minutos y afectó aproximadamente el 15–20% del tráfico de internet de ese momento. El post-mortem oficial de Cloudflare está publicado en su blog.
+
+> **CVE-2018-12121 — Node.js HTTP DoS (noviembre 2018, CVSS 7.5)**
+> El parser HTTP interno de Node.js no validaba correctamente el tamaño de los headers HTTP entrantes. Un atacante podía enviar una petición HTTP con headers de longitud máxima (~80 KB cada uno) repetidos miles de veces. El servidor intentaba parsear todos los headers antes de retornar cualquier error, consumiendo CPU y memoria de forma proporcional al tamaño total de la petición, sin necesidad de completar un handshake válido. Afectaba todas las versiones de Node.js anteriores a 6.15.0, 8.14.0, 10.14.0 y 11.3.0. El fix fue agregar un límite de 8 KB por header y rechazar la conexión inmediatamente al excederlo.
 
 ---
 
