@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import AttackResult from '../components/AttackResult';
+import VulnInfo from '../components/VulnInfo';
 import { BASE_URL } from '../config';
 
 export default function FailingOpenScreen({ isFixed }: { isFixed: boolean }) {
@@ -39,6 +40,16 @@ export default function FailingOpenScreen({ isFixed }: { isFixed: boolean }) {
         El middleware de autenticación captura el error pero llama next() en lugar de bloquear.
         El panel admin es accesible sin token válido.
       </Text>
+      {!isFixed && (
+        <VulnInfo
+          why="El sistema toma la decisión más permisiva ante un error en lugar de la más restrictiva. Un atacante puede provocar el error intencionalmente para saltarse la autenticación por completo."
+          cases={[
+            'SSO corporativo que deja pasar al usuario si el proveedor de identidad está caído.',
+            'API de pagos que aprueba la transacción si el servicio antifraude lanza una excepción.',
+            'Control de acceso físico que abre la puerta si pierde conexión al servidor de permisos.',
+          ]}
+        />
+      )}
       <TouchableOpacity style={styles.button} onPress={() => attack({})}>
         <Text style={styles.buttonText}>Sin token</Text>
       </TouchableOpacity>

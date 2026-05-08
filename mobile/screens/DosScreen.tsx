@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import AttackResult from '../components/AttackResult';
+import VulnInfo from '../components/VulnInfo';
 import { BASE_URL } from '../config';
 
 export default function DosScreen({ isFixed }: { isFixed: boolean }) {
@@ -36,6 +37,16 @@ export default function DosScreen({ isFixed }: { isFixed: boolean }) {
       <Text style={styles.description}>
         Una entrada inválida en /reports provoca una excepción no controlada que expone detalles internos del servidor.
       </Text>
+      {!isFixed && (
+        <VulnInfo
+          why="Una entrada no validada provoca una excepción que, al no estar controlada, expone información interna y puede dejar el servidor en un estado inconsistente, afectando la disponibilidad para todos los usuarios."
+          cases={[
+            'API de reportes bancarios que crashea con rangos de fecha fuera de rango.',
+            'Servicio de conversión de imágenes que expone rutas del sistema con archivos corruptos.',
+            'Endpoint de búsqueda que falla con caracteres especiales y devuelve el error de BD.',
+          ]}
+        />
+      )}
       <TouchableOpacity style={styles.button} onPress={() => attack('/reports')}>
         <Text style={styles.buttonText}>Sin month</Text>
       </TouchableOpacity>

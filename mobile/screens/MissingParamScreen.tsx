@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import AttackResult from '../components/AttackResult';
+import VulnInfo from '../components/VulnInfo';
 import { BASE_URL } from '../config';
 
 export default function MissingParamScreen({ isFixed }: { isFixed: boolean }) {
@@ -40,6 +41,16 @@ export default function MissingParamScreen({ isFixed }: { isFixed: boolean }) {
       <Text style={styles.description}>
         Si falta userId o role, el servidor asigna valores inseguros por default en lugar de rechazar la operación.
       </Text>
+      {!isFixed && (
+        <VulnInfo
+          why="El servidor asume valores por defecto inseguros cuando faltan datos críticos en lugar de abortar la operación. Esto puede provocar escalación de privilegios sin que el atacante necesite credenciales válidas."
+          cases={[
+            'E-commerce que procesa un pedido con precio $0 si el campo no llega en el body.',
+            'Sistema de roles que asigna "admin" como fallback ante un campo faltante en el request.',
+            'App médica que registra dosis 0 en lugar de rechazar una prescripción incompleta.',
+          ]}
+        />
+      )}
       <TouchableOpacity style={styles.button} onPress={() => attack({ role: 'admin' })}>
         <Text style={styles.buttonText}>Sin userId</Text>
       </TouchableOpacity>

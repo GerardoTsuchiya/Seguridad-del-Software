@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import AttackResult from '../components/AttackResult';
+import VulnInfo from '../components/VulnInfo';
 import { BASE_URL } from '../config';
 
 export default function SensitiveErrorScreen({ isFixed }: { isFixed: boolean }) {
@@ -36,6 +37,16 @@ export default function SensitiveErrorScreen({ isFixed }: { isFixed: boolean }) 
       <Text style={styles.description}>
         Al fallar la consulta, el servidor devuelve el stack trace completo, la ruta interna y los parámetros recibidos.
       </Text>
+      {!isFixed && (
+        <VulnInfo
+          why="Los stack traces revelan rutas de archivos, versiones de frameworks y lógica interna. Con esa información un atacante puede construir ataques mucho más dirigidos y específicos."
+          cases={[
+            'Django en modo debug expuesto en producción mostrando código fuente al visitante.',
+            'API REST que devuelve mensajes de excepción SQL con nombres de tablas y columnas.',
+            'Servidor Node.js sin manejador global que expone el árbol de llamadas completo.',
+          ]}
+        />
+      )}
       <TouchableOpacity style={styles.button} onPress={() => attack('/debug-user')}>
         <Text style={styles.buttonText}>Sin ID</Text>
       </TouchableOpacity>
